@@ -4,7 +4,7 @@ import streamlit as st
 
 from utils import semantic_search_document
 
-RAG_TOP_K = 5
+RAG_TOP_K = 1
 RAG_THRESHOLD = 0.3
 
 
@@ -35,3 +35,4 @@ def render(df):
                 st.info("Ничего не найдено.")
         except Exception as e:
             st.error(f"Ошибка: {e}")
+

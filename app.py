@@ -1,20 +1,33 @@
-import streamlit as st
 import os
-def check_password():
-    def password_entered():
-        if st.session_state.get("password") == os.getenv("APP_PASSWORD"):
-            st.session_state["password_correct"] = True
-        else:
-            st.session_state["password_correct"] = False
+import hmac
+import streamlit as st
 
-    if not st.session_state.get("password_correct", False):
-        st.text_input("Пароль", type="password", key="password", on_change=password_entered)
+def check_password():
+    expected = os.getenv("APP_PASSWORD")
+    if not expected:
+        st.error("APP_PASSWORD не задан в окружении.")
         return False
 
-    return True
+    if st.session_state.get("password_correct", False):
+        return True
+
+    def password_entered():
+        entered = st.session_state.get("password", "")
+        ok = hmac.compare_digest(entered, expected)
+        st.session_state["password_correct"] = ok
+        if ok:
+            st.session_state.pop("password", None)
+
+    st.text_input("Пароль", type="password", key="password", on_change=password_entered)
+
+    if "password_correct" in st.session_state and not st.session_state["password_correct"]:
+        st.error("Неверный пароль")
+
+    return False
 
 if not check_password():
     st.stop()
+
 
 import json
 

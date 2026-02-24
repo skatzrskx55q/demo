@@ -1,4 +1,4 @@
-﻿import html
+import html
 
 import streamlit as st
 
@@ -20,12 +20,18 @@ def render_general_phrases_html(phrases, best_phrase=None, matched_phrases=None)
         else:
             bg_color = "#f9f9f9"
             font_weight = "normal"
-
-        tiles_html += f"""
-        <div style="display:inline-block;border:1px solid #e0e0e0;border-radius:12px;padding:8px 12px;margin:4px;background-color:{bg_color};font-weight:{font_weight};font-size:14px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-            {html.escape(phrase)}
-        </div>
-        """
+        tiles_html += (
+            f'<div style="display:inline-block;'
+            f'border:1px solid #e0e0e0;'
+            f'border-radius:12px;'
+            f'padding:8px 12px;'
+            f'margin:4px;'
+            f'background-color:{bg_color};'
+            f'font-weight:{font_weight};'
+            f'font-size:14px;'
+            f'box-shadow:0 1px 3px rgba(0,0,0,0.05);">'
+            f'{html.escape(phrase)}</div>'
+        )
     return tiles_html
 
 

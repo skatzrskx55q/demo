@@ -2,6 +2,7 @@ import pandas as pd
 import requests
 import re
 import base64
+import copy
 from io import BytesIO
 from sentence_transformers import SentenceTransformer, util
 import pymorphy2
@@ -43,18 +44,74 @@ for group in SYNONYM_GROUPS:
     for lemma in lemmas:
         SYNONYM_DICT[lemma] = lemmas
 
+DEFAULT_PARSE_PROFILE = {
+    "search": {
+        "split_newline": True,
+        "split_pipe": True,
+        "split_slash": True,
+    },
+    "filter": {
+        "split_newline": True,
+        "split_pipe": True,
+    },
+}
+
+
+def _resolve_parse_profile(parse_profile=None):
+    profile = copy.deepcopy(DEFAULT_PARSE_PROFILE)
+    if parse_profile is None:
+        return profile
+    if not isinstance(parse_profile, dict):
+        raise TypeError("parse_profile должен быть словарём.")
+
+    allowed_sections = set(profile.keys())
+    unknown_sections = set(parse_profile.keys()) - allowed_sections
+    if unknown_sections:
+        raise KeyError(f"Неизвестные секции parse_profile: {sorted(unknown_sections)}")
+
+    for section, overrides in parse_profile.items():
+        if overrides is None:
+            continue
+        if not isinstance(overrides, dict):
+            raise TypeError(f"Секция parse_profile.{section} должна быть словарём.")
+
+        allowed_keys = set(profile[section].keys())
+        unknown_keys = set(overrides.keys()) - allowed_keys
+        if unknown_keys:
+            raise KeyError(
+                f"Неизвестные ключи parse_profile.{section}: {sorted(unknown_keys)}"
+            )
+
+        for key, value in overrides.items():
+            if not isinstance(value, bool):
+                raise TypeError(f"Значение parse_profile.{section}.{key} должно быть bool.")
+            profile[section][key] = value
+
+    return profile
+
 # ---------- Универсальное разбиение примеров ----------
 @functools.lru_cache(maxsize=5000)
-def split_by_slash(text: str):
+def split_by_slash(text: str, split_pipe: bool = True, split_slash: bool = True):
     """Разворачивает варианты по / и сегменты по | внутри одной строки."""
     text = text.strip()
     if not text:
         return []
 
-    segments = [seg.strip() for seg in text.split("|") if seg.strip()]
+    if split_pipe:
+        segments = [seg.strip() for seg in text.split("|") if seg.strip()]
+    else:
+        segments = [text]
     all_phrases = []
 
     for segment in segments:
+        segment = re.sub(r"\s+", " ", segment).strip()
+        if not segment:
+            continue
+
+        if not split_slash:
+            all_phrases.append(segment)
+            continue
+
         parts = []
         last_idx = 0
 
@@ -86,17 +143,25 @@ def split_by_slash(text: str):
     return list(dict.fromkeys(all_phrases))
 
 
-def split_examples(cell):
+def split_examples(cell, split_newline: bool = True, split_pipe: bool = True, split_slash: bool = True):
     if pd.isna(cell) or not isinstance(cell, str):
         return []
 
-    lines = [line.strip() for line in cell.split("\n") if line.strip()]
-    if not lines:
-        lines = [cell.strip()]
+    if split_newline:
+        lines = [line.strip() for line in cell.split("\n") if line.strip()]
+    else:
+        line = cell.strip()
+        lines = [line] if line else []
 
     result = []
     for line in lines:
-        result.extend(split_by_slash(line))
+        result.extend(
+            split_by_slash(
+                line,
+                split_pipe=split_pipe,
+                split_slash=split_slash,
+            )
+        )
     # Preserve order, remove duplicates inside one cell.
     return list(dict.fromkeys([item for item in result if item]))
 
@@ -152,27 +217,43 @@ def _resolve_result_columns(df, filter_cols=None, display_cols=None, comment_col
 
     return use_filter_cols, use_display_cols, use_comment_col
 
-def _split_filter_values(value: str):
+def _split_filter_values(value: str, split_newline: bool = True, split_pipe: bool = True):
     if value is None:
         return []
     text = str(value).strip()
     if not text:
         return []
-    # Support pipe and newline separated lists.
+    # Support configurable separators for filter values.
     parts = []
-    for chunk in text.split("\n"):
-        for part in chunk.split("|"):
+    chunks = text.split("\n") if split_newline else [text]
+    for chunk in chunks:
+        candidate_parts = chunk.split("|") if split_pipe else [chunk]
+        for part in candidate_parts:
             part = part.strip()
             if part:
                 parts.append(part)
     return parts
 
-def _explode_search_rows(df, search_cols, intermediate_col="examples_split"):
+def _explode_search_rows(
+    df,
+    search_cols,
+    intermediate_col="examples_split",
+    split_newline: bool = True,
+    split_pipe: bool = True,
+    split_slash: bool = True,
+):
     phrase_parts_col = []
     for _, row in df.iterrows():
         row_parts = []
         for col in search_cols:
-            row_parts.extend(split_examples(row[col]))
+            row_parts.extend(
+                split_examples(
+                    row[col],
+                    split_newline=split_newline,
+                    split_pipe=split_pipe,
+                    split_slash=split_slash,
+                )
+            )
         row_parts = [p for p in row_parts if p]
         if not row_parts:
             row_parts = [""]
@@ -253,7 +334,11 @@ def _structured_search_results(
 
 # ---------- Унифицированная загрузка табличных данных ----------
 
-def load_unified_excel(url, source_id="0"):
+def load_unified_excel(url, source_id="0", parse_profile=None):
+    profile = _resolve_parse_profile(parse_profile)
+    search_profile = profile["search"]
+    filter_profile = profile["filter"]
+
     resp = requests.get(url, headers=get_github_headers())
     if resp.status_code != 200:
         raise ValueError(f"Ошибка загрузки {url}")
@@ -274,7 +359,14 @@ def load_unified_excel(url, source_id="0"):
     df = df.reset_index(drop=True)
     df["original_index"] = [f"{source_id}:{idx}" for idx in df.index]
 
-    df = _explode_search_rows(df, search_cols, intermediate_col="phrase_list").reset_index(drop=True)
+    df = _explode_search_rows(
+        df,
+        search_cols,
+        intermediate_col="phrase_list",
+        split_newline=search_profile["split_newline"],
+        split_pipe=search_profile["split_pipe"],
+        split_slash=search_profile["split_slash"],
+    ).reset_index(drop=True)
 
     df["phrase_proc"] = df["phrase"].apply(preprocess)
     df["phrase_lemmas"] = df["phrase_proc"].apply(
@@ -288,22 +380,36 @@ def load_unified_excel(url, source_id="0"):
         def _collect_topics(row):
             values = []
             for col in filter_cols:
-                values.extend(_split_filter_values(row[col]))
+                values.extend(
+                    _split_filter_values(
+                        row[col],
+                        split_newline=filter_profile["split_newline"],
+                        split_pipe=filter_profile["split_pipe"],
+                    )
+                )
             return list(dict.fromkeys(values))
         df["topics"] = df.apply(_collect_topics, axis=1)
     elif "display_filter1" in df.columns:
-        df["topics"] = df["display_filter1"].apply(_split_filter_values)
+        df["topics"] = df["display_filter1"].apply(
+            lambda v: _split_filter_values(
+                v,
+                split_newline=filter_profile["split_newline"],
+                split_pipe=filter_profile["split_pipe"],
+            )
+        )
     else:
         df["topics"] = [[] for _ in range(len(df))]
 
+    df.attrs["parse_profile"] = profile
     return df
 
 
-def load_unified_excels(urls):
+def load_unified_excels(urls, parse_profile=None):
+    profile = _resolve_parse_profile(parse_profile)
     dfs = []
     for i, url in enumerate(urls):
         try:
-            dfs.append(load_unified_excel(url, source_id=str(i)))
+            dfs.append(load_unified_excel(url, source_id=str(i), parse_profile=profile))
         except Exception as e:
             print(f"Ошибка с {url}: {e}")
             raise
@@ -323,6 +429,7 @@ def load_unified_excels(urls):
         original_examples_map[orig_idx].add(row["phrase"])
 
     df_all.attrs["original_examples_map"] = original_examples_map
+    df_all.attrs["parse_profile"] = profile
 
     # Эмбеддинги.
     model = get_model()

@@ -1,5 +1,21 @@
 import streamlit as st
 
+def check_password():
+    def password_entered():
+        if st.session_state.get("password") == os.getenv("APP_PASSWORD"):
+            st.session_state["password_correct"] = True
+        else:
+            st.session_state["password_correct"] = False
+
+    if not st.session_state.get("password_correct", False):
+        st.text_input("Пароль", type="password", key="password", on_change=password_entered)
+        return False
+
+    return True
+
+if not check_password():
+    st.stop()
+
 import json
 
 from ui.agreements_ui import render as render_agreements_ui

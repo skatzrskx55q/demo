@@ -211,11 +211,18 @@ def _resolve_result_columns(df, filter_cols=None, display_cols=None, comment_col
     if use_comment_col is None:
         use_comment_col = default_comment_cols[0] if default_comment_cols else "comment1"
 
-    for col in use_filter_cols + use_display_cols + [use_comment_col]:
-        if col not in df.columns:
-            df[col] = ""
-
     return use_filter_cols, use_display_cols, use_comment_col
+
+
+def _value_to_text(value):
+    if value is None:
+        return ""
+    try:
+        if pd.isna(value):
+            return ""
+    except Exception:
+        pass
+    return str(value)
 
 def _split_filter_values(value: str, split_newline: bool = True, split_pipe: bool = True):
     if value is None:
@@ -303,9 +310,9 @@ def _structured_search_results(
                     {
                         "score": score_float,
                         "phrase": row["phrase"],
-                        "filters": {col: str(row[col]) for col in use_filter_cols},
-                        "displays": {col: str(row[col]) for col in use_display_cols},
-                        "comment": str(row[use_comment_col]),
+                        "filters": {col: _value_to_text(row.get(col, "")) for col in use_filter_cols},
+                        "displays": {col: _value_to_text(row.get(col, "")) for col in use_display_cols},
+                        "comment": _value_to_text(row.get(use_comment_col, "")),
                         "original_index": row["original_index"],
                     }
                 )
@@ -320,9 +327,9 @@ def _structured_search_results(
                 keyword_results.append(
                     {
                         "phrase": row["phrase"],
-                        "filters": {col: str(row[col]) for col in use_filter_cols},
-                        "displays": {col: str(row[col]) for col in use_display_cols},
-                        "comment": str(row[use_comment_col]),
+                        "filters": {col: _value_to_text(row.get(col, "")) for col in use_filter_cols},
+                        "displays": {col: _value_to_text(row.get(col, "")) for col in use_display_cols},
+                        "comment": _value_to_text(row.get(use_comment_col, "")),
                         "original_index": row["original_index"],
                     }
                 )

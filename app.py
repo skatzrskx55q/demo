@@ -17,9 +17,7 @@ st.title("🤖 Проверка фраз")
 DOCUMENTS = {
     "Договорённости": {
         "urls": [
-            "https://raw.githubusercontent.com/skatzrskx55q/Retrieve2/main/data6.xlsx",
-            "https://raw.githubusercontent.com/skatzrsk/semantic-assistant/main/data21.xlsx",
-            "https://raw.githubusercontent.com/skatzrsk/semantic-assistant/main/data31.xlsx",
+            "https://raw.githubusercontent.com/skatzrskx55q/Retrieve2/main/data66.xlsx",
         ],
         "loader": load_unified_excels,
         "loader_kwargs": {
@@ -30,7 +28,7 @@ DOCUMENTS = {
     },
     "Интенты": {
         "urls": [
-            "https://raw.githubusercontent.com/skatzrskx55q/Retrieve2/main/intents2.xlsx",
+            "https://raw.githubusercontent.com/skatzrskx55q/Retrieve2/main/intents22.xlsx",
         ],
         "loader": load_unified_excels,
         "loader_kwargs": {},
@@ -38,7 +36,7 @@ DOCUMENTS = {
     },
     "Generals": {
         "urls": [
-            "https://raw.githubusercontent.com/skatzrskx55q/Retrieve2/main/intents3.xlsx",
+            "https://raw.githubusercontent.com/skatzrskx55q/Retrieve2/main/intents33.xlsx",
         ],
         "loader": load_unified_excels,
         "loader_kwargs": {},

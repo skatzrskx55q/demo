@@ -9,6 +9,12 @@ def check_password():
         return False
 
     if st.session_state.get("password_correct", False):
+        # Показываем уведомление один раз после успешного входа
+        if not st.session_state.get("login_notice_shown", False):
+            st.success(
+                "Пароль успешно введен. Первый запуск может занять некоторое время, пожалуйста, подождите."
+            )
+            st.session_state["login_notice_shown"] = True
         return True
 
     def password_entered():
@@ -17,6 +23,9 @@ def check_password():
         st.session_state["password_correct"] = ok
         if ok:
             st.session_state.pop("password", None)
+            st.session_state["login_notice_shown"] = False  # чтобы показать сообщение после входа
+        else:
+            st.session_state["login_notice_shown"] = False
 
     st.text_input("Пароль", type="password", key="password", on_change=password_entered)
 

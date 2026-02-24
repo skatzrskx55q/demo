@@ -8,35 +8,25 @@ def check_password():
         st.error("APP_PASSWORD не задан в окружении.")
         return False
 
-    if st.session_state.get("password_correct", False):
-        # Показываем уведомление один раз после успешного входа
-        if not st.session_state.get("login_notice_shown", False):
-            st.success(
-                "Пароль успешно введен. Первый запуск может занять некоторое время, пожалуйста, подождите."
-            )
-            st.session_state["login_notice_shown"] = True
-        return True
-
     def password_entered():
         entered = st.session_state.get("password", "")
         ok = hmac.compare_digest(entered, expected)
         st.session_state["password_correct"] = ok
         if ok:
             st.session_state.pop("password", None)
-            st.session_state["login_notice_shown"] = False  # чтобы показать сообщение после входа
-        else:
-            st.session_state["login_notice_shown"] = False
 
-    st.text_input("Пароль", type="password", key="password", on_change=password_entered)
+    if not st.session_state.get("password_correct", False):
+        st.text_input("Пароль", type="password", key="password", on_change=password_entered)
+        st.info("После ввода верного пароля первый запуск может занять некоторое время, пожалуйста, подождите.")
+        if "password_correct" in st.session_state and not st.session_state["password_correct"]:
+            st.error("Неверный пароль")
+        return False
 
-    if "password_correct" in st.session_state and not st.session_state["password_correct"]:
-        st.error("Неверный пароль")
+    return True
 
-    return False
 
 if not check_password():
     st.stop()
-
 
 import json
 

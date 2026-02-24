@@ -29,6 +29,7 @@ def render_intent_phrases_html(phrases, best_phrase=None, matched_phrases=None):
             f'padding:8px 12px;'
             f'margin:4px;'
             f'background-color:{bg_color};'
+            f'color:#333;'
             f'font-weight:{font_weight};'
             f'font-size:14px;'
             f'box-shadow:0 1px 3px rgba(0,0,0,0.05);">'
@@ -60,7 +61,7 @@ def render(df):
             comment = str(row.get(COMMENT_COL, ""))
 
             block_html = f"""
-            <div style="border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:16px;background-color:#f9f9f9;box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+            <div style="border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:16px;background-color:#f9f9f9;color:#333;box-shadow:0 2px 6px rgba(0,0,0,0.05);">
                 <div style="display:flex; gap:12px; align-items:center; font-size:18px; font-weight:600;">
                     <span style="color:#d32f2f;">🔴 {html.escape(general)}</span>
                     <span style="color:#1976d2;">🔵 {html.escape(local)}</span>
@@ -104,7 +105,7 @@ def render(df):
                     local = filters.get(LOCAL_FILTER_COL, "")
                     description = displays.get(DESCRIPTION_DISPLAY_COL, "")
                     block_html = f"""
-                    <div style="border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:16px;background-color:#f9f9f9;box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+                    <div style="border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:16px;background-color:#f9f9f9;color:#333;box-shadow:0 2px 6px rgba(0,0,0,0.05);">
                         <div style="display:flex; gap:12px; align-items:center; font-size:18px; font-weight:600;">
                             <span style="color:#d32f2f;">🔴 {html.escape(general)}</span>
                             <span style="color:#1976d2;">🔵 {html.escape(local)}</span>
@@ -145,7 +146,7 @@ def render(df):
                     local = filters.get(LOCAL_FILTER_COL, "")
                     description = displays.get(DESCRIPTION_DISPLAY_COL, "")
                     block_html = f"""
-                    <div style="border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:16px;background-color:#f9f9f9;box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+                    <div style="border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:16px;background-color:#f9f9f9;color:#333;box-shadow:0 2px 6px rgba(0,0,0,0.05);">
                         <div style="display:flex; gap:12px; align-items:center; font-size:18px; font-weight:600;">
                             <span style="color:#d32f2f;">🔴 {html.escape(general)}</span>
                             <span style="color:#1976d2;">🔵 {html.escape(local)}</span>

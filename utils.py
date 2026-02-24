@@ -158,14 +158,13 @@ def _split_filter_values(value: str):
     text = str(value).strip()
     if not text:
         return []
-    # Support comma, pipe, and newline separated lists.
+    # Support pipe and newline separated lists.
     parts = []
     for chunk in text.split("\n"):
         for part in chunk.split("|"):
-            for sub in part.split(","):
-                sub = sub.strip()
-                if sub:
-                    parts.append(sub)
+            part = part.strip()
+            if part:
+                parts.append(part)
     return parts
 
 def _explode_search_rows(df, search_cols, intermediate_col="examples_split"):

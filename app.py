@@ -16,8 +16,6 @@ DOCUMENTS = {
     "Договорённости": {
         "urls": [
             "https://raw.githubusercontent.com/skatzrskx55q/Retrieve2/main/data66.xlsx",
-            "https://raw.githubusercontent.com/skatzrsk/semantic-assistant/main/data21.xlsx",
-            "https://raw.githubusercontent.com/skatzrsk/semantic-assistant/main/data31.xlsx",
         ],
         "loader": lambda urls: load_unified_excels(urls),
         "renderer": render_agreements_ui,

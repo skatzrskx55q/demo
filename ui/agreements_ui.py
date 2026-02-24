@@ -11,7 +11,7 @@ def render_phrases_grid(phrases, cols=3, color="#e0f7fa"):
         for col, phrase in zip(cols_streamlit, row):
             col.markdown(
                 f"""<div style="background-color:{color};
-                                color:#111 !important;
+                                color:#111;
                                 padding:6px 10px;
                                 border-radius:12px;
                                 display:inline-block;
@@ -167,5 +167,6 @@ def render(df):
         st.markdown("### ❌ Интерпретации 'НЕТ'")
         no_phrases = ["Не надо", "Не хочу", "Не готов", "Не помню", "Не пробовала", "Не интересно"]
         render_phrases_grid(no_phrases, cols=3, color="#f9d6d5")
+
 
 

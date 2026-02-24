@@ -27,6 +27,7 @@ def render_general_phrases_html(phrases, best_phrase=None, matched_phrases=None)
             f'padding:8px 12px;'
             f'margin:4px;'
             f'background-color:{bg_color};'
+            f'color:#333;'
             f'font-weight:{font_weight};'
             f'font-size:14px;'
             f'box-shadow:0 1px 3px rgba(0,0,0,0.05);">'
@@ -55,7 +56,7 @@ def render(df):
             comment = str(row.get(COMMENT_COL, ""))
 
             block_html = f"""
-            <div style="border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:16px;background-color:#f9f9f9;box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+            <div style="border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:16px;background-color:#f9f9f9;color:#333;box-shadow:0 2px 6px rgba(0,0,0,0.05);">
                 <div style="font-size:18px;font-weight:600;">{html.escape(general)}</div>
                 <div style="margin-top:10px;"><strong>Примеры:</strong></div>
                 <div style="margin-top:6px;">{tiles_html}</div>
@@ -92,7 +93,7 @@ def render(df):
                     filters = group.get("filters", {})
                     general = filters.get(GENERAL_FILTER_COL, "")
                     block_html = f"""
-                    <div style="border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:16px;background-color:#f9f9f9;box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+                    <div style="border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:16px;background-color:#f9f9f9;color:#333;box-shadow:0 2px 6px rgba(0,0,0,0.05);">
                         <div style="font-size:18px;font-weight:600;">{html.escape(general)}{score_display}</div>
                         <div style="margin-top:10px;"><strong>Примеры:</strong></div>
                         <div style="margin-top:6px;">{tiles_html}</div>
@@ -125,7 +126,7 @@ def render(df):
                     filters = group.get("filters", {})
                     general = filters.get(GENERAL_FILTER_COL, "")
                     block_html = f"""
-                    <div style="border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:16px;background-color:#f9f9f9;box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+                    <div style="border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:16px;background-color:#f9f9f9;color:#333;box-shadow:0 2px 6px rgba(0,0,0,0.05);">
                         <div style="font-size:18px;font-weight:600;">{html.escape(general)}</div>
                         <div style="margin-top:10px;"><strong>Примеры:</strong></div>
                         <div style="margin-top:6px;">{tiles_html}</div>

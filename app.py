@@ -17,7 +17,9 @@ st.title("🤖 Проверка фраз")
 DOCUMENTS = {
     "Договорённости": {
         "urls": [
-            "https://raw.githubusercontent.com/skatzrskx55q/Retrieve2/main/data66.xlsx",
+            "https://raw.githubusercontent.com/skatzrskx55q/Retrieve2/main/data6.xlsx",
+            "https://raw.githubusercontent.com/skatzrsk/semantic-assistant/main/data21.xlsx",
+            "https://raw.githubusercontent.com/skatzrsk/semantic-assistant/main/data31.xlsx",
         ],
         "loader": load_unified_excels,
         "loader_kwargs": {
@@ -28,7 +30,7 @@ DOCUMENTS = {
     },
     "Интенты": {
         "urls": [
-            "https://raw.githubusercontent.com/skatzrskx55q/Retrieve2/main/intents22.xlsx",
+            "https://raw.githubusercontent.com/skatzrskx55q/Retrieve2/main/intents2.xlsx",
         ],
         "loader": load_unified_excels,
         "loader_kwargs": {},
@@ -36,7 +38,7 @@ DOCUMENTS = {
     },
     "Generals": {
         "urls": [
-            "https://raw.githubusercontent.com/skatzrskx55q/Retrieve2/main/intents33.xlsx",
+            "https://raw.githubusercontent.com/skatzrskx55q/Retrieve2/main/intents3.xlsx",
         ],
         "loader": load_unified_excels,
         "loader_kwargs": {},
@@ -71,7 +73,7 @@ with st.sidebar:
         st.info("Для этой команды документы пока не настроены.")
 
 
-@st.cache_data(ttl=3600)
+@st.cache_resource(ttl=3600)
 def get_data(domain_name, loader_kwargs_key=""):
     _ = loader_kwargs_key  # Учитываем конфиг загрузки в ключе кэша.
     conf = DOCUMENTS[domain_name]

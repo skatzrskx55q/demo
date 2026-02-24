@@ -1,5 +1,5 @@
 import streamlit as st
-
+import os
 def check_password():
     def password_entered():
         if st.session_state.get("password") == os.getenv("APP_PASSWORD"):

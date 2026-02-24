@@ -4,13 +4,21 @@ import streamlit as st
 
 from utils import semantic_search_document
 
+RAG_TOP_K = 5
+RAG_THRESHOLD = 0.3
+
 
 def render(df):
     query = st.text_input("Введите запрос по документу:")
 
     if query:
         try:
-            results = semantic_search_document(query, df)
+            results = semantic_search_document(
+                query,
+                df,
+                top_k=RAG_TOP_K,
+                threshold=RAG_THRESHOLD,
+            )
             if results:
                 st.markdown("### 📄 Релевантные фрагменты")
                 for score, chunk in results:

@@ -1,4 +1,4 @@
-﻿import pandas as pd
+import pandas as pd
 import requests
 import re
 import base64
@@ -107,7 +107,8 @@ def _extract_index_from_suffix(col_name: str, prefix: str) -> int:
     return 10**9
 
 def _sorted_prefixed_columns(columns, prefix: str):
-    matched = [c for c in columns if c.lower().startswith(prefix.lower())]
+    pattern = re.compile(rf"^{re.escape(prefix.lower())}\d+$")
+    matched = [c for c in columns if pattern.match(c.lower())]
     return sorted(matched, key=lambda c: _extract_index_from_suffix(c.lower(), prefix.lower()))
 
 def _ensure_comment_column(df, target_name: str = "comment1"):

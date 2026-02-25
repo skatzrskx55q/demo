@@ -44,17 +44,17 @@ st.set_page_config(page_title="Проверка фраз", layout="centered")
 st.title("🤖 Проверка фраз")
 
 DOCUMENTS = {
-    "Договорённости": {
-        "urls": [
-            "https://raw.githubusercontent.com/skatzrskx55q/Retrieve2/main/data66.xlsx",
-        ],
-        "loader": load_unified_excels,
-        "loader_kwargs": {
+    #"Договорённости": {
+       # "urls": [
+            #"https://raw.githubusercontent.com/skatzrskx55q/Retrieve2/main/data66.xlsx",
+        #],
+       # "loader": load_unified_excels,
+      #  "loader_kwargs": {
             # Пример точечного override:
             # "parse_profile": {"filter": {"split_newline": False}},
-        },
-        "renderer": render_agreements_ui,
-    },
+       # },
+       # "renderer": render_agreements_ui,
+   # },
     "Интенты": {
         "urls": [
             "https://raw.githubusercontent.com/skatzrskx55q/Retrieve2/main/intents22.xlsx",
@@ -83,7 +83,8 @@ DOCUMENTS = {
 
 TEAMS = {
     "Чат-бот": ["Confluence"],
-    "Голос": ["Договорённости", "Интенты", "Generals"],
+    "Голос": ["Интенты", "Generals"],
+    #"Голос": ["Договорённости", "Интенты", "Generals"],
     "Чат-Бот2": [],
     "Чат-Бот3": [],
 }

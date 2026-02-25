@@ -71,18 +71,18 @@ DOCUMENTS = {
         "loader_kwargs": {},
         "renderer": render_generals_ui,
     },
-    "Confluence": {
-        "urls": [
-            "https://skatzr.atlassian.net/wiki/spaces/~7120203b1cf4260fea434db9c78c6e8549bd2b/pages/4194305",
-        ],
-        "loader": load_document_data,
-        "loader_kwargs": {},
-        "renderer": render_rag_ui,
-    },
+  #  "Confluence": {
+     #   "urls": [
+      #      "https://skatzr.atlassian.net/wiki/spaces/~7120203b1cf4260fea434db9c78c6e8549bd2b/pages/4194305",
+     #  ],
+     #   "loader": load_document_data,
+     #   "loader_kwargs": {},
+    #    "renderer": render_rag_ui,
+    #},
 }
 
 TEAMS = {
-    "Чат-бот": ["Confluence"],
+   # "Чат-бот": ["Confluence"],
     "Голос": ["Интенты", "Generals"],
     #"Голос": ["Договорённости", "Интенты", "Generals"],
     "Чат-Бот2": [],

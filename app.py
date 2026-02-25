@@ -119,7 +119,7 @@ def _preload_voice_docs():
     preload_docs = _resolve_preload_docs(PRELOAD_TEAMS)
     preload_errors = {}
 
-    with st.spinner("Предзагрузка документов команды «Голос». Это может занять 1-2 минуты..."):
+    with st.spinner("Предзагрузка документов. Это может занять 1-2 минуты..."):
         for doc_name in preload_docs:
             try:
                 get_data(doc_name, loader_kwargs_key=_loader_kwargs_key(doc_name))

@@ -2,7 +2,7 @@ import html
 
 import streamlit as st
 
-from utils import group_search_results, keyword_search_rows, semantic_search_rows
+from utils import combined_search_rows, group_search_results
 
 GENERAL_FILTER_COL = "display_filter2"
 LOCAL_FILTER_COL = "display_filter1"
@@ -80,7 +80,7 @@ def render(df):
     query = st.text_input("Введите запрос для поиска по примерам:")
     if query:
         try:
-            sem_results_raw = semantic_search_rows(
+            sem_results_raw, exact_results_raw = combined_search_rows(
                 query,
                 df,
                 threshold=0.5,
@@ -123,13 +123,6 @@ def render(df):
             else:
                 st.info("Нет результатов семантического поиска.")
 
-            exact_results_raw = keyword_search_rows(
-                query,
-                df,
-                filter_cols=[GENERAL_FILTER_COL, LOCAL_FILTER_COL],
-                display_cols=[DESCRIPTION_DISPLAY_COL],
-                comment_col=COMMENT_COL,
-            )
             if exact_results_raw:
                 exact_groups = group_search_results(
                     exact_results_raw,

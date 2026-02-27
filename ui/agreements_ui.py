@@ -1,7 +1,7 @@
 ﻿import streamlit as st
 import torch
 
-from utils import keyword_search_rows, semantic_search_rows
+from utils import combined_search_rows
 
 
 def render_phrases_grid(phrases, cols=3, color="#e0f7fa"):
@@ -75,7 +75,7 @@ def render(df):
                 if search_df.empty:
                     st.warning("Нет данных для поиска по выбранным тематикам.")
                 else:
-                    results = semantic_search_rows(
+                    results, exact_results = combined_search_rows(
                         query,
                         search_df,
                         threshold=0.5,
@@ -106,13 +106,6 @@ def render(df):
                     else:
                         st.warning("Совпадений не найдено в умном поиске.")
 
-                    exact_results = keyword_search_rows(
-                        query,
-                        search_df,
-                        display_cols=["display1"],
-                        comment_col="comment1",
-                        deduplicate=True,
-                    )
                     if exact_results:
                         st.markdown("### 🧷 Точный поиск:")
                         for item in exact_results:

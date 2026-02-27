@@ -274,6 +274,41 @@ def _explode_search_rows(
     df["phrase"] = df["phrase"].astype(str).str.strip()
     return df[df["phrase"] != ""]
 
+
+def _get_text_column_cache(df):
+    expected_size = len(df)
+    cache = df.attrs.get("_text_column_cache")
+    if cache is None or cache.get("__size__") != expected_size:
+        cache = {"__size__": expected_size}
+        df.attrs["_text_column_cache"] = cache
+    return cache
+
+
+def _get_column_text_values(df, col_name):
+    cache = _get_text_column_cache(df)
+    if col_name not in cache:
+        if col_name in df.columns:
+            cache[col_name] = [_value_to_text(value) for value in df[col_name].tolist()]
+        else:
+            cache[col_name] = [""] * len(df)
+    return cache[col_name]
+
+
+def _get_search_row_cache(df):
+    expected_size = len(df)
+    cache = df.attrs.get("_search_row_cache")
+    if cache is None or cache.get("size") != expected_size:
+        cache = {
+            "size": expected_size,
+            "phrase": [_value_to_text(value) for value in df["phrase"].tolist()],
+            "phrase_proc": [_value_to_text(value) for value in df["phrase_proc"].tolist()],
+            "phrase_lemmas": df["phrase_lemmas"].tolist(),
+            "original_index": [_value_to_text(value) for value in df["original_index"].tolist()],
+        }
+        df.attrs["_search_row_cache"] = cache
+    return cache
+
+
 def _structured_search_results(
     query,
     df,
@@ -292,6 +327,8 @@ def _structured_search_results(
     query_proc = preprocess(query)
     query_words = re.findall(r"\w+", query_proc)
     query_lemmas = [lemmatize_cached(w) for w in query_words]
+    query_lemma_groups = [SYNONYM_DICT.get(lemma, {lemma}) for lemma in query_lemmas]
+
     sims = None
     if include_semantic:
         model = get_model()
@@ -299,40 +336,67 @@ def _structured_search_results(
         phrase_embs = df.attrs["phrase_embs"]
         sims = util.pytorch_cos_sim(query_emb, phrase_embs)[0]
 
+    row_cache = _get_search_row_cache(df)
+    phrases = row_cache["phrase"]
+    phrase_proc_values = row_cache["phrase_proc"]
+    phrase_lemmas_values = row_cache["phrase_lemmas"]
+    original_indexes = row_cache["original_index"]
+
+    filter_values_by_col = {col: _get_column_text_values(df, col) for col in use_filter_cols}
+    display_values_by_col = {col: _get_column_text_values(df, col) for col in use_display_cols}
+    comment_values = _get_column_text_values(df, use_comment_col)
+
     semantic_results = []
     keyword_results = []
-    for idx in range(len(df)):
-        row = df.iloc[idx]
+    for idx in range(row_cache["size"]):
+        semantic_hit = False
+        score_float = None
         if include_semantic and sims is not None:
             score_float = float(sims[idx])
-            if score_float >= threshold:
-                semantic_results.append(
-                    {
-                        "score": score_float,
-                        "phrase": row["phrase"],
-                        "filters": {col: _value_to_text(row.get(col, "")) for col in use_filter_cols},
-                        "displays": {col: _value_to_text(row.get(col, "")) for col in use_display_cols},
-                        "comment": _value_to_text(row.get(use_comment_col, "")),
-                        "original_index": row["original_index"],
-                    }
-                )
+            semantic_hit = score_float >= threshold
 
+        keyword_hit = False
         if include_keyword:
-            lemma_match = all(
-                any(ql in SYNONYM_DICT.get(pl, {pl}) for pl in row.phrase_lemmas)
-                for ql in query_lemmas
+            phrase_lemma_set = phrase_lemmas_values[idx]
+            if not isinstance(phrase_lemma_set, set):
+                try:
+                    phrase_lemma_set = set(phrase_lemma_set)
+                except TypeError:
+                    phrase_lemma_set = {_value_to_text(phrase_lemma_set)}
+            lemma_match = all(not phrase_lemma_set.isdisjoint(group) for group in query_lemma_groups)
+            partial_match = all(word in phrase_proc_values[idx] for word in query_words)
+            keyword_hit = lemma_match or partial_match
+
+        if not semantic_hit and not keyword_hit:
+            continue
+
+        filters_payload = {col: filter_values_by_col[col][idx] for col in use_filter_cols}
+        displays_payload = {col: display_values_by_col[col][idx] for col in use_display_cols}
+        comment_payload = comment_values[idx]
+        phrase_payload = phrases[idx]
+        original_index_payload = original_indexes[idx]
+
+        if semantic_hit:
+            semantic_results.append(
+                {
+                    "score": score_float,
+                    "phrase": phrase_payload,
+                    "filters": filters_payload,
+                    "displays": displays_payload,
+                    "comment": comment_payload,
+                    "original_index": original_index_payload,
+                }
             )
-            partial_match = all(q in row.phrase_proc for q in query_words)
-            if lemma_match or partial_match:
-                keyword_results.append(
-                    {
-                        "phrase": row["phrase"],
-                        "filters": {col: _value_to_text(row.get(col, "")) for col in use_filter_cols},
-                        "displays": {col: _value_to_text(row.get(col, "")) for col in use_display_cols},
-                        "comment": _value_to_text(row.get(use_comment_col, "")),
-                        "original_index": row["original_index"],
-                    }
-                )
+        if keyword_hit:
+            keyword_results.append(
+                {
+                    "phrase": phrase_payload,
+                    "filters": filters_payload,
+                    "displays": displays_payload,
+                    "comment": comment_payload,
+                    "original_index": original_index_payload,
+                }
+            )
 
     semantic_results = sorted(semantic_results, key=lambda x: x["score"], reverse=True)
     if top_k is not None:
@@ -496,6 +560,36 @@ def keyword_search_rows(query, df, filter_cols=None, display_cols=None, comment_
     if deduplicate:
         keyword_results = _deduplicate_structured_results(keyword_results, keep_max_score=False)
     return keyword_results
+
+
+def combined_search_rows(
+    query,
+    df,
+    threshold=0.5,
+    top_k=None,
+    filter_cols=None,
+    display_cols=None,
+    comment_col=None,
+    deduplicate=False,
+):
+    semantic_results, keyword_results = _structured_search_results(
+        query,
+        df,
+        threshold=threshold,
+        top_k=top_k,
+        filter_cols=filter_cols,
+        display_cols=display_cols,
+        comment_col=comment_col,
+        include_semantic=True,
+        include_keyword=True,
+    )
+    if deduplicate:
+        semantic_results = _deduplicate_structured_results(semantic_results, keep_max_score=True)
+        semantic_results = sorted(semantic_results, key=lambda x: x["score"], reverse=True)
+        if top_k is not None:
+            semantic_results = semantic_results[:top_k]
+        keyword_results = _deduplicate_structured_results(keyword_results, keep_max_score=False)
+    return semantic_results, keyword_results
 
 
 def group_search_results(search_results, df_attrs, search_type="semantic", group_by_filter_cols=None):
